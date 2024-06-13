@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Motion Detector</title>
+  </head>
+  <body>
+    <h1>Motion Detector Status</h1>
+    <div id="status">
+      <div id="connection" style="color: green">connected to server</div>
+    </div>
+
+    <script>
+      async function checkMotionStatus() {
+        try {
+          let response = await fetch("/api/status");
+          let data = await response.json();
+          let html = "";
+          if (!Boolean(data.isEmpty)) {
+            document.getElementById("connection").style = "color: green";
+            document.getElementById("connection").innerHTML =
+              "connected to server";
+            html += "<div>";
+            html += parseInt(data.detected)
+              ? "Motion detected on "
+              : "Motion stopped on ";
+            html += data.date;
+            html += "</div>";
+            document.getElementById("status").innerHTML += html;
+          }
+        } catch (error) {
+          console.error("Error fetching motion status:", error);
+          document.getElementById("connection").style = "color: red";
+          document.getElementById("connection").innerHTML = "disconnected";
+        }
+      }
+
+      setInterval(checkMotionStatus, 3000); // Check every 5 seconds
+    </script>
+  </body>
+</html>

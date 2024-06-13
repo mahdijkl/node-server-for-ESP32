@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logs</title>
+    <script>
+      // Function to parse CSV and generate HTML table
+      function parseCSV(csv) {
+        var rows = csv.split("\n").slice(1, -1);
+        var html = "<div>";
+        rows.forEach(function (row) {
+          var cells = row.split(",");
+          html += "<div>";
+          html += `Motion ${parseInt(cells[2]) ? "detected" : "stopped"} on ${
+            cells[1]
+          } ${cells[0]} `;
+          html += "</div>";
+        });
+        html += "</div>";
+        return html;
+      }
+
+      // Fetch CSV file and generate HTML table
+      fetch("/api/logs")
+        .then((response) => response.text())
+        .then((csv) => {
+          var tableContainer = document.getElementById("table-container");
+          tableContainer.innerHTML = parseCSV(csv);
+        })
+        .catch((error) => console.error(error));
+    </script>
+  </head>
+  <body>
+    <div id="table-container"></div>
+  </body>
+</html>
