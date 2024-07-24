@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
 const app = express();
 const port = 8007;
@@ -12,9 +13,22 @@ let motionDetected = false;
 let isNew = false;
 
 const apiKeys = {
-  esp32: "16d7a4fca7442dda3ad93c9a726597e4", // API key for ESP32
-  client: "client_api_key", // API key for clients
+  esp32: "16d7a4fca7442dda3ad93c9a726597e4",
 };
+
+telegramApiToken = "188428767:AEhcC4SpIDyZbMHeqgU8OAWeaJGF4KqzGIFGDVVn";
+telegramURL = "https://tapi.bale.ai/bot" + telegramApiToken + "/sendMessage";
+
+async function postDataToTelegram(address, data) {
+  axios
+    .post(address, data)
+    .then(function (response) {
+      console.log(response);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+}
 
 // Log file path
 const logFilePath = path.join(__dirname, "logs.csv");
@@ -28,7 +42,10 @@ app.post("/api/motion", (req, res) => {
   if (req.body.apiKey == apiKeys.esp32) {
     motionDetected = req.body.detected;
     isNew = true;
-    date = new Date().toLocaleString("fa-IR");
+    date = new Date();
+    date.setHours(date.getHours() + 3);
+    date.setMinutes(date.getMinutes() + 30);
+    date = date.toLocaleString("fa-IR");
     const logEntry = `${date},${req.body.detected}\n`;
     fs.appendFile(logFilePath, logEntry, (err) => {
       if (err) {
@@ -41,6 +58,13 @@ app.post("/api/motion", (req, res) => {
           } and logged on ${new Date().toISOString()}`
         );
         res.status(200).send({ success: true });
+        const requestBody = {
+          chat_id: "1292108244",
+          text: `Motion ${
+            parseInt(req.body.detected) ? "detected" : "stopped"
+          } on ${date}`,
+        };
+        postDataToTelegram(telegramURL, requestBody);
       }
     });
   } else {
