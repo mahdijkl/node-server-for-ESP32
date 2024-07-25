@@ -16,8 +16,10 @@ const apiKeys = {
   esp32: "16d7a4fca7442dda3ad93c9a726597e4",
 };
 
-telegramApiToken = "188428767:AEhcC4SpIDyZbMHeqgU8OAWeaJGF4KqzGIFGDVVn";
-telegramURL = "https://tapi.bale.ai/bot" + telegramApiToken + "/sendMessage";
+telegramApiToken = "7225467295:AAGUKcV6DZDaxVOvtgF3t3FqndZPHaQNV2A";
+telegramURL =
+  "https://api.telegram.org/bot" + telegramApiToken + "/sendMessage";
+chatID = "5888595541";
 
 async function postDataToTelegram(address, data) {
   axios
@@ -59,7 +61,7 @@ app.post("/api/motion", (req, res) => {
         );
         res.status(200).send({ success: true });
         const requestBody = {
-          chat_id: "1292108244",
+          chat_id: chatID,
           text: `Motion ${
             parseInt(req.body.detected) ? "detected" : "stopped"
           } on ${date}`,
