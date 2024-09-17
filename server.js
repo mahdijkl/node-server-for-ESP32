@@ -7,19 +7,25 @@ const axios = require("axios");
 const app = express();
 const port = 8007;
 
-app.use(bodyParser.json());
-
 let motionDetected = false;
 let isNew = false;
+
+let telegramApiToken = "7225467295:AAGUKcV6DZDaxVOvtgF3t3FqndZPHaQNV2A";
+
+let telegramURL =
+  "https://api.telegram.org/bot" + telegramApiToken + "/sendMessage";
+let chatID = "1091924060";
+
 
 const apiKeys = {
   esp32: "16d7a4fca7442dda3ad93c9a726597e4",
 };
 
-telegramApiToken = "7225467295:AAGUKcV6DZDaxVOvtgF3t3FqndZPHaQNV2A";
-telegramURL =
-  "https://api.telegram.org/bot" + telegramApiToken + "/sendMessage";
-chatID = "5888595541";
+const logFilePath = path.join(__dirname, "logs.csv");
+
+if (!fs.existsSync(logFilePath)) {
+  fs.writeFileSync(logFilePath, "date,time,detected\n");
+}
 
 async function postDataToTelegram(address, data) {
   axios
@@ -32,16 +38,12 @@ async function postDataToTelegram(address, data) {
     });
 }
 
-// Log file path
-const logFilePath = path.join(__dirname, "logs.csv");
+app.use(bodyParser.json());
 
-// Ensure log file exists and has the correct headers
-if (!fs.existsSync(logFilePath)) {
-  fs.writeFileSync(logFilePath, "date,time,detected\n");
-}
 // API endpoint for ESP32 to send motion detection
 app.post("/api/motion", (req, res) => {
-  if (req.body.apiKey == apiKeys.esp32) {
+  console.log(req.body.apikey);
+  if (req.body.apikey === apiKeys.esp32) {
     motionDetected = req.body.detected;
     isNew = true;
     date = new Date();
@@ -74,6 +76,11 @@ app.post("/api/motion", (req, res) => {
   }
 });
 
+app.get("/status", (req, res) => {
+  const filePath = path.join(__dirname, "public", "status.html");
+  res.sendFile(filePath);
+});
+
 // API endpoint for clients to check motion detection status
 app.get("/api/status", (req, res) => {
   if (isNew) {
@@ -82,13 +89,12 @@ app.get("/api/status", (req, res) => {
       .send({ isEmpty: false, date: date, detected: motionDetected });
     isNew = false;
   } else {
-    res.status(200).send({ isEmpty: true });
+    date = new Date();
+    date.setHours(date.getHours() + 3);
+    date.setMinutes(date.getMinutes() + 30);
+    date = date.toLocaleString("fa-IR");
+    res.status(200).send({ isEmpty: true, date: date });
   }
-});
-
-app.get("/status", (req, res) => {
-  const filePath = path.join(__dirname, "public", "status.html");
-  res.sendFile(filePath);
 });
 
 // API endpoint to get logs for the last hour
